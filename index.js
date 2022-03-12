@@ -2,73 +2,82 @@ const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require('mysql2');
 const db = require('./db/connection');
-let currentAction = "mainmenu";
 
-function init() {
-    console.clear();
-    console.log(`
-    ==========================
-    EMPLOYEE TRACKER v.0.1
-    ==========================`)
-    menu();
-}
-
+console.clear();
 
 function getEmployees() {
     console.clear();
-    const sql = `SELECT * FROM employee`;
+    const sql = `SELECT id, first_name, last_name FROM employees`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
         }
         console.table(rows);
-        currentAction = "viewEmployees";
+        console.log(`Employees: ${rows.length} \n`);
+        app();
     })
 }
 
-function menu() {
-    switch (currentAction) {
-        case currentAction = "mainmenu":
-            inquirer
-                .prompt({
-                    type: 'list',
-                    name: 'main',
-                    message: 'Choose an action',
-                    choices: ['Show employees', 'Quit']
-                })
-                .then(function (action) {
-                    switch (action.main) {
-                        case 'Show employees':
-                            currentAction = "showEmployees";
-                            menu();
-                            break;
-                    }
+const addEmployee = () => {
 
-                })
-            break;
+    
+    console.log("add employee");
 
-            case currentAction = "showEmployees":
-            getEmployees();
-            inquirer
-            .prompt({
-                type: 'list',
-                name: 'employeeActions',
-                message: 'Choose an action',
-                choices: ['Edit', 'Back to Main Menu']
-            })
-            .then(function (action) {
-                switch (action.employeeActions) {
-                    case 'Back to Main Menu':
-                        init();
+
+    return inquirer.prompt([
+        {
+            type: 'input',
+            name: 'firstname',
+            message: 'Enter the employees first name',
+            validate: nameInput => {
+                if (nameInput) {
+                    return true;
+                } else {
+                    console.log('Please enter the first name!');
+                    return false;
                 }
-            })
-            break;
-
-
-        default:
-            break;
-    }
-
+            }
+        },
+        {
+            type: 'input',
+            name: 'lastname',
+            message: 'Enter the employees last name',
+            validate: nameInput => {
+                if (nameInput) {
+                    return true;
+                } else {
+                    console.log('Please enter the last name!');
+                    return false;
+                }
+            }
+        },
+    ])
+    .then(function(answer) {
+        console.log(answer);
+    })
 }
 
-init();
+function app() {
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'main',
+            message: 'Choose an action',
+            choices: ['List employees', 'Add an Employee', 'Quit']
+        })
+        .then(function (action) {
+            switch (action.main) {
+                case 'Show employees':
+                    getEmployees();
+                    break;
+                case 'Add an Employee':
+                    addEmployee();
+                // case 'Quit':
+                //     console.clear();
+                //     process.exit(1);
+            }
+
+        })
+}
+
+app();
