@@ -45,7 +45,7 @@ function getEmployees() {
 
 function getDepartments() {
     // console.clear();
-    const sql = `SELECT id, department_name FROM departments`;
+    const sql = `SELECT department_name as Departments FROM departments`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -58,7 +58,7 @@ function getDepartments() {
 
 function getRoles() {
     // console.clear();
-    const sql = `SELECT title AS Title, salary AS Salary, department_name as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
+    const sql = `SELECT title AS Roles, salary AS Salary, department_name as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
 
 
     // let query = "SELECT roles.title, roles.salary, department.dept_name AS department FROM roles INNER JOIN department ON department.id = roles.department_id;";
@@ -154,6 +154,7 @@ function removeEmployee() {
         })
 }
 
+
 function changeManager() {
     updateServer();
     inquirer
@@ -176,25 +177,41 @@ function changeManager() {
             db.query(sql, params, (err, res) => {
                 if (err) throw err;
                 updateServer();
+
+                console.log(`\nManager updated!\n`)
+
                 app();
-            }) 
-            
-            // app();
+            })
+        })
+}
 
+function changeRole() {
+    updateServer();
+    inquirer
+        .prompt(
+            [{
+                type: 'list',
+                name: 'employeelist',
+                message: "Choose an employee who's role you would like to update",
+                choices: allemployees
+            },
+            {
+                type: 'list',
+                name: 'rolelist',
+                message: 'Choose a new role for the employee',
+                choices: allroles
+            }])
+        .then(function (answer) {
+            const sql = `UPDATE employees SET role_id = ? WHERE id = ?`;
+            const params = [answer.rolelist, answer.employeelist]
+            db.query(sql, params, (err, res) => {
+                if (err) throw err;
+                updateServer();
 
-            // if (answer.employeelist === "CANCEL") {
-            //     app();
-            // } else {
+                console.log(`\nRole updated!\n`)
 
-            //     const sql = `DELETE FROM employees WHERE id = ?`;
-            //     const params = answer.employeelist;
-            //     // console.log(answer.employeelist)
-            //     db.query(sql, params, (err, res) => {
-            //         if(err) throw err;
-            //     })
-            //     app();
-            // }
-
+                app();
+            })
         })
 }
 
@@ -214,7 +231,63 @@ function updateEmployee() {
                     updateServer();
                     changeManager();
                     break;
+                case "Change an employee's role":
+                    updateServer();
+                    changeRole();
             }
+        })
+}
+
+function addDepartment() {
+
+    updateServer();
+    const newEmployee = inquirer.prompt([
+        {
+            type: 'input',
+            name: 'firstname',
+            message: 'Enter the employees first name',
+            validate: nameInput => {
+                if (nameInput) {
+                    return true;
+                } else {
+                    console.log('Please enter the first name!');
+                    return false;
+                }
+            }
+        },
+        {
+            type: 'input',
+            name: 'lastname',
+            message: 'Enter the employees last name',
+            validate: nameInput => {
+                if (nameInput) {
+                    return true;
+                } else {
+                    console.log('Please enter the last name!');
+                    return false;
+                }
+            }
+        },
+        {
+            type: 'list',
+            name: 'employeeRole',
+            message: 'Enter the employees role',
+            choices: allroles
+        }
+    ])
+        .then(function (answer) {
+            const sql = `INSERT INTO employees SET ?`;
+            const params = {
+                first_name: answer.firstname,
+                last_name: answer.lastname,
+                role_id: answer.employeeRole
+            };
+            db.query(sql, params, function (err, res) {
+                if (err) throw err;
+                console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
+                updateServer();
+                app();
+            })
         })
 }
 
