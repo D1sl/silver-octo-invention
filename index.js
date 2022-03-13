@@ -32,7 +32,7 @@ db.connect(function (err) {
 
 function getEmployees() {
     // console.clear();
-    const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.department_name AS Department FROM employees e JOIN roles ON roles.id = e.role_id JOIN departments ON roles.department_id = departments.id INNER JOIN employees m ON e.manager_id = m.id;`;
+    const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.department_name AS Department FROM employees e LEFT JOIN roles ON roles.id = e.role_id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees m ON e.manager_id = m.id;`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -58,7 +58,7 @@ function getDepartments() {
 
 function getRoles() {
     // console.clear();
-    const sql = `SELECT roles.title, roles.salary FROM roles`;
+    const sql = `SELECT title AS Title, salary AS Salary, department_name as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
 
 
     // let query = "SELECT roles.title, roles.salary, department.dept_name AS department FROM roles INNER JOIN department ON department.id = roles.department_id;";
@@ -121,12 +121,14 @@ function addEmployee() {
             db.query(sql, params, function (err, res) {
                 if (err) throw err;
                 console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
+                updateServer();
                 app();
             })
         })
 }
 
 function removeEmployee() {
+    updateServer();
     inquirer
         .prompt({
             type: 'list',
@@ -145,6 +147,7 @@ function removeEmployee() {
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
                 })
+                updateServer();
                 app();
             }
 
@@ -152,6 +155,7 @@ function removeEmployee() {
 }
 
 function changeManager() {
+    updateServer();
     inquirer
         .prompt(
             [{
@@ -171,6 +175,7 @@ function changeManager() {
             const params = [answer.managerlist, answer.employeelist]
             db.query(sql, params, (err, res) => {
                 if (err) throw err;
+                updateServer();
                 app();
             }) 
             
@@ -195,6 +200,7 @@ function changeManager() {
 
 
 function updateEmployee() {
+    updateServer();
     inquirer
         .prompt({
             type: 'list',
@@ -205,6 +211,7 @@ function updateEmployee() {
         .then(function (action) {
             switch (action.updateaction) {
                 case "Change an employee's manager":
+                    updateServer();
                     changeManager();
                     break;
             }
