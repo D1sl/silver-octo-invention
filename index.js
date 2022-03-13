@@ -3,8 +3,6 @@ const cTable = require("console.table");
 const mysql = require('mysql2');
 const db = require('./db/connection');
 
-
-
 // Update everything
 function updateServer() {
     db.query("SELECT * from roles", function (error, res) {
@@ -20,10 +18,11 @@ function updateServer() {
             name: `${employee.first_name} ${employee.last_name}`,
             value: employee.id
         }));
+        allemployees.push("CANCEL")
     });
 }
 
-db.connect(function(err) {
+db.connect(function (err) {
     if (err) throw err;
     updateServer();
 });
@@ -78,7 +77,7 @@ function getRoles() {
 function addEmployee() {
 
     updateServer();
-    inquirer.prompt([
+    const newEmployee = inquirer.prompt([
         {
             type: 'input',
             name: 'firstname',
@@ -113,19 +112,113 @@ function addEmployee() {
         }
     ])
         .then(function (answer) {
+            const sql = `INSERT INTO employees SET ?`;
+            const params = {
+                first_name: answer.firstname,
+                last_name: answer.lastname,
+                role_id: answer.employeeRole
+            };
+            db.query(sql, params, function (err, res) {
+                if (err) throw err;
+                console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
+                app();
+            })
+        })
+}
 
-            console.log(answer);
+function removeEmployee() {
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'employeelist',
+            message: 'Choose an employee to remove or choose CANCEL to cancel',
+            choices: allemployees,
+        })
+        .then(function (answer) {
+            if (answer.employeelist === "CANCEL") {
+                app();
+            } else {
+
+                const sql = `DELETE FROM employees WHERE id = ?`;
+                const params = answer.employeelist;
+                // console.log(answer.employeelist)
+                db.query(sql, params, (err, res) => {
+                    if (err) throw err;
+                })
+                app();
+            }
 
         })
 }
 
+function changeManager() {
+    inquirer
+        .prompt(
+            [{
+                type: 'list',
+                name: 'employeelist',
+                message: "Choose an employee who's manager you would like to update",
+                choices: allemployees
+            },
+            {
+                type: 'list',
+                name: 'managerlist',
+                message: 'Choose a manager for the employee',
+                choices: allemployees
+            }])
+        .then(function (answer) {
+            const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
+            const params = [answer.managerlist, answer.employeelist]
+            db.query(sql, params, (err, res) => {
+                if (err) throw err;
+                app();
+            }) 
+            
+            // app();
+
+
+            // if (answer.employeelist === "CANCEL") {
+            //     app();
+            // } else {
+
+            //     const sql = `DELETE FROM employees WHERE id = ?`;
+            //     const params = answer.employeelist;
+            //     // console.log(answer.employeelist)
+            //     db.query(sql, params, (err, res) => {
+            //         if(err) throw err;
+            //     })
+            //     app();
+            // }
+
+        })
+}
+
+
+function updateEmployee() {
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'updateaction',
+            message: 'What would you like to do?',
+            choices: ["Change an employee's manager", "Change an employee's role"]
+        })
+        .then(function (action) {
+            switch (action.updateaction) {
+                case "Change an employee's manager":
+                    changeManager();
+                    break;
+            }
+        })
+}
+
 function app() {
+    updateServer();
     inquirer
         .prompt({
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Quit']
+            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Quit']
         })
         .then(function (action) {
             switch (action.main) {
@@ -140,9 +233,16 @@ function app() {
                     break;
                 case 'Add an Employee':
                     addEmployee();
-                // case 'Quit':
-                //     console.clear();
-                //     process.exit(1);
+                    break;
+                case 'Remove an Employee':
+                    removeEmployee();
+                    break;
+                case 'Update an Employee':
+                    updateEmployee();
+                    break;
+                case 'Quit':
+                    console.clear();
+                    process.exit(1);
             }
 
         })
