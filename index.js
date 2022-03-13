@@ -32,7 +32,7 @@ db.connect(function (err) {
 
 function getEmployees() {
     // console.clear();
-    const sql = `SELECT employees.first_name AS "First Name", employees.last_name AS "Last Name", roles.title AS "Title", roles.salary AS "Salary" FROM employees LEFT JOIN roles ON employees.role_id = roles.id;`;
+    const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.department_name AS Department FROM employees e JOIN roles ON roles.id = e.role_id JOIN departments ON roles.department_id = departments.id INNER JOIN employees m ON e.manager_id = m.id;`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
