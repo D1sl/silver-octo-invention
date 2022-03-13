@@ -10,7 +10,7 @@ function updateServer() {
     });
 
     db.query("SELECT * from departments", function (error, res) {
-        alldepartments = res.map(dept => ({ name: dept.name, value: dept.id }));
+        alldepartments = res.map(department => ({ name: department.title, value: department.id }));
     });
 
     db.query("SELECT * from employees", function (error, res) {
@@ -257,7 +257,7 @@ function addDepartment() {
         }
     ])
         .then(function (answer) {
-            const sql = `INSERT INTO departments (department_name) VALUES ('${answer.departmentName}');`;
+            const sql = `INSERT INTO departments (title) VALUES ('${answer.departmentName}');`;
             db.query(sql, function (err, res) {
                 if (err) throw err;
                 console.table(`\n${answer.departmentName} was added!\n`);
@@ -274,7 +274,7 @@ function removeDepartment() {
             type: 'list',
             name: 'departmentlist',
             message: 'Choose a department to remove or choose CANCEL to cancel',
-            choices: alldepartments,
+            choices: alldepartments
         })
         .then(function (answer) {
             if (answer.departmentlist === "CANCEL") {
@@ -285,6 +285,8 @@ function removeDepartment() {
                 const params = answer.departmentlist;
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
+                    console.table(`\n${answer.departmentlist} was removed!\n`);
+
                 })
                 updateServer();
                 app();
@@ -300,7 +302,7 @@ function app() {
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Quit']
+            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Remove a Department', 'Quit']
         })
         .then(function (action) {
             switch (action.main) {
@@ -324,6 +326,9 @@ function app() {
                     break;
                 case 'Add a Department':
                     addDepartment();
+                    break;
+                case 'Remove a Department':
+                    removeDepartment();
                     break;
                 case 'Quit':
                     console.clear();
