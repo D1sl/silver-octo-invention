@@ -244,50 +244,52 @@ function addDepartment() {
     const newEmployee = inquirer.prompt([
         {
             type: 'input',
-            name: 'firstname',
-            message: 'Enter the employees first name',
-            validate: nameInput => {
-                if (nameInput) {
+            name: 'departmentName',
+            message: 'Enter a name for the department',
+            validate: deptInput => {
+                if (deptInput) {
                     return true;
                 } else {
-                    console.log('Please enter the first name!');
+                    console.log('Please enter a name for the department!');
                     return false;
                 }
             }
-        },
-        {
-            type: 'input',
-            name: 'lastname',
-            message: 'Enter the employees last name',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter the last name!');
-                    return false;
-                }
-            }
-        },
-        {
-            type: 'list',
-            name: 'employeeRole',
-            message: 'Enter the employees role',
-            choices: allroles
         }
     ])
         .then(function (answer) {
-            const sql = `INSERT INTO employees SET ?`;
-            const params = {
-                first_name: answer.firstname,
-                last_name: answer.lastname,
-                role_id: answer.employeeRole
-            };
-            db.query(sql, params, function (err, res) {
+            const sql = `INSERT INTO departments (department_name) VALUES ('${answer.departmentName}');`;
+            db.query(sql, function (err, res) {
                 if (err) throw err;
-                console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
+                console.table(`\n${answer.departmentName} was added!\n`);
                 updateServer();
                 app();
             })
+        })
+}
+
+function removeDepartment() {
+    updateServer();
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'departmentlist',
+            message: 'Choose a department to remove or choose CANCEL to cancel',
+            choices: alldepartments,
+        })
+        .then(function (answer) {
+            if (answer.departmentlist === "CANCEL") {
+                app();
+            } else {
+
+                const sql = `DELETE FROM departments WHERE id = ?`;
+                const params = answer.departmentlist;
+                db.query(sql, params, (err, res) => {
+                    if (err) throw err;
+                })
+                updateServer();
+                app();
+            }
+
         })
 }
 
@@ -298,7 +300,7 @@ function app() {
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Quit']
+            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Quit']
         })
         .then(function (action) {
             switch (action.main) {
@@ -319,6 +321,9 @@ function app() {
                     break;
                 case 'Update an Employee':
                     updateEmployee();
+                    break;
+                case 'Add a Department':
+                    addDepartment();
                     break;
                 case 'Quit':
                     console.clear();
