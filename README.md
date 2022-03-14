@@ -17,5 +17,5 @@ This app allows a user to track employees.
 [![Alt text](https://img.youtube.com/vi/E76ib2STPHQ.jpg)](https://youtu.be/E76ib2STPHQ)
 
 ## Links
-* [Repository](hhttps://github.com/D1sl/silver-octo-invention)
+* [Repository](https://github.com/D1sl/silver-octo-invention)
 * [Video](https://youtu.be/E76ib2STPHQ)
