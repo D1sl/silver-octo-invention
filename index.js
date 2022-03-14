@@ -24,11 +24,13 @@ function updateServer() {
     });
 }
 
+// Connect to keep a constant connection to the database
 db.connect(function (err) {
     if (err) throw err;
     updateServer();
 });
 
+// Serve a table of all employees
 function getEmployees() {
     console.clear();
     const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.depttitle AS Department FROM employees e LEFT JOIN roles ON roles.id = e.role_id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees m ON e.manager_id = m.id;`;
@@ -42,6 +44,7 @@ function getEmployees() {
     })
 }
 
+// Serve a table of all departments
 function getDepartments() {
     console.clear();
     const sql = `SELECT depttitle as Departments FROM departments`;
@@ -55,6 +58,7 @@ function getDepartments() {
     })
 }
 
+// Serve a table of all roles
 function getRoles() {
     console.clear();
     const sql = `SELECT title AS Roles, salary AS Salary, depttitle as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
@@ -69,8 +73,8 @@ function getRoles() {
     })
 }
 
+// Add employees
 function addEmployee() {
-
     updateServer();
     const newEmployee = inquirer.prompt([
         {
@@ -123,6 +127,7 @@ function addEmployee() {
         })
 }
 
+// Remove employees
 function removeEmployee() {
     updateServer();
     inquirer
@@ -151,6 +156,7 @@ function removeEmployee() {
         })
 }
 
+// Remove roles
 function removeRole() {
     updateServer();
     inquirer
@@ -180,7 +186,7 @@ function removeRole() {
         })
 }
 
-
+// Change an employees manager
 function changeManager() {
     updateServer();
     inquirer
@@ -212,6 +218,7 @@ function changeManager() {
         })
 }
 
+// Change an employees role
 function changeRole() {
     updateServer();
     inquirer
@@ -242,7 +249,7 @@ function changeRole() {
         })
 }
 
-
+// Update employee - ask what to do
 function updateEmployee() {
     updateServer();
     inquirer
@@ -268,8 +275,8 @@ function updateEmployee() {
         })
 }
 
+// Add a department
 function addDepartment() {
-
     updateServer();
     const newEmployee = inquirer.prompt([
         {
@@ -298,6 +305,7 @@ function addDepartment() {
         })
 }
 
+// Remove a department
 function removeDepartment() {
     updateServer();
     inquirer
@@ -327,6 +335,7 @@ function removeDepartment() {
         })
 }
 
+// Update a department
 function updateDepartment() {
     updateServer();
     inquirer
@@ -363,6 +372,7 @@ function updateDepartment() {
         )
 }
 
+// Action menu for employees
 function employeeMenu(message) {
     updateServer();
 
@@ -398,6 +408,7 @@ function employeeMenu(message) {
         })
 }
 
+// Action menu for roles
 function rolesMenu(message) {
     updateServer();
 
@@ -433,6 +444,7 @@ function rolesMenu(message) {
         })
 }
 
+// Edit a role
 function editRole() {
     updateServer();
     inquirer
@@ -491,6 +503,7 @@ function editRole() {
         })
 }
 
+// Add a role
 function addRole() {
     updateServer();
     const newRole = inquirer.prompt([
@@ -540,6 +553,7 @@ function addRole() {
         })
 }
 
+// Action menu for departments
 function departmentsMenu(message) {
     updateServer();
 
@@ -575,6 +589,7 @@ function departmentsMenu(message) {
         })
 }
 
+// Get sums of different departments
 function budgetByDepartment() {
     updateServer();
     inquirer
@@ -603,7 +618,7 @@ function budgetByDepartment() {
         })
 }
 
-
+// Main menu
 function init() {
     console.clear();
     console.log(`
