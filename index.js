@@ -59,10 +59,6 @@ function getRoles() {
     console.clear();
     const sql = `SELECT title AS Roles, salary AS Salary, depttitle as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
 
-
-    // let query = "SELECT roles.title, roles.salary, department.dept_name AS department FROM roles INNER JOIN department ON department.id = roles.department_id;";
-
-
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -120,7 +116,7 @@ function addEmployee() {
             db.query(sql, params, function (err, res) {
                 if (err) throw err;
                 console.clear();
-                console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
+                console.table(`\n${answer.firstname} ${answer.lastname} was hired!\n`);
                 updateServer();
                 employeeMenu();
             })
@@ -320,7 +316,7 @@ function removeDepartment() {
                 const params = answer.departmentlist;
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
-                    
+
                 })
                 console.clear();
                 message = `The department was removed!\n`;
@@ -347,7 +343,6 @@ function updateDepartment() {
                 message: 'Enter a new name for this department'
             }
         ])
-
 
         .then(function (action) {
 
@@ -380,14 +375,14 @@ function employeeMenu(message) {
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['View', 'Add', 'Edit', 'Fire', 'Main Menu']
+            choices: ['View', 'Hire', 'Edit', 'Fire', 'Main Menu']
         })
         .then(function (action) {
             switch (action.main) {
                 case 'View':
                     getEmployees();
                     break;
-                case 'Add':
+                case 'Hire':
                     addEmployee();
                     break;
                 case 'Fire':
@@ -400,7 +395,6 @@ function employeeMenu(message) {
                     console.clear();
                     init();
             }
-
         })
 }
 
@@ -436,7 +430,6 @@ function rolesMenu(message) {
                     console.clear();
                     init();
             }
-
         })
 }
 
@@ -462,7 +455,7 @@ function editRole() {
                         return false;
                     }
                 }
-            }, 
+            },
             {
                 type: 'number',
                 name: 'salary',
@@ -579,9 +572,37 @@ function departmentsMenu(message) {
                     console.clear();
                     init();
             }
-
         })
 }
+
+function budgetByDepartment() {
+    updateServer();
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'dept',
+            message: 'Choose a department',
+            choices: alldepartments
+        })
+        .then(function (id) {
+
+            if (id.dept === "CANCEL") {
+                init();
+            } else {
+
+            const sql = `SELECT SUM(salary) AS "Total Salary" FROM departments LEFT JOIN roles ON roles.department_id = departments.id WHERE departments.id = ?`;
+            const params = id.dept;
+        
+            db.query(sql, params, function (err, res) {
+                console.clear();
+                if (err) throw err;
+                console.table(res);
+                budgetByDepartment();
+            })
+        }
+        })
+}
+
 
 function init() {
     console.clear();
@@ -599,7 +620,7 @@ function init() {
                 type: 'list',
                 name: 'main',
                 message: 'Choose an action',
-                choices: ['EMPLOYEES', 'ROLES', 'DEPARTMENTS', 'Quit']
+                choices: ['EMPLOYEES', 'ROLES', 'DEPARTMENTS', 'VIEW BUDGET BY DEPARTMENT', 'Quit']
             })
             .then(function (action) {
                 switch (action.main) {
@@ -611,6 +632,9 @@ function init() {
                         break;
                     case 'ROLES':
                         rolesMenu();
+                        break;
+                    case 'VIEW BUDGET BY DEPARTMENT':
+                        budgetByDepartment();
                         break;
                     case 'Quit':
                         console.clear();
