@@ -204,17 +204,17 @@ function changeManager() {
                 choices: allemployees
             }])
         .then(function (answer) {
-            
-                const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
-                const params = [answer.managerlist, answer.employeelist]
-                db.query(sql, params, (err, res) => {
-                    if (err) throw err;
-                    updateServer();
-                    console.clear();
-                    message = "Manager updated!\n"
-                    employeeMenu(message);
-                })
-            
+
+            const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
+            const params = [answer.managerlist, answer.employeelist]
+            db.query(sql, params, (err, res) => {
+                if (err) throw err;
+                updateServer();
+                console.clear();
+                message = "Manager updated!\n"
+                employeeMenu(message);
+            })
+
         })
 }
 
@@ -373,7 +373,7 @@ function updateDepartment() {
 function employeeMenu(message) {
     updateServer();
 
-    if(message) {
+    if (message) {
         console.log(message);
     }
 
@@ -409,7 +409,7 @@ function employeeMenu(message) {
 function rolesMenu(message) {
     updateServer();
 
-    if(message) {
+    if (message) {
         console.log(message);
     }
 
@@ -442,8 +442,64 @@ function rolesMenu(message) {
         })
 }
 
-function addRole() {
+function editRole() {
+    updateServer();
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'updateaction',
+                message: 'Which role would you like to change?',
+                choices: allroles
+            },
+            {
+                type: 'input',
+                name: 'newname',
+                message: 'Enter a new name for the role',
+                validate: newname => {
+                    if (newname) {
+                        return true;
+                    } else {
+                        console.log('Please enter a name for the role!');
+                        return false;
+                    }
+                }
+            }, 
+            {
+                type: 'number',
+                name: 'salary',
+                message: 'Enter a new salary for the role',
+                validate: salaryinput => {
+                    if (salaryinput) {
+                        return true;
+                    } else {
+                        console.log('Please enter a salary for the role!');
+                        return false;
+                    }
+                }
+            },
+            {
+                type: 'list',
+                name: 'department',
+                message: 'Assign a new department for this role',
+                choices: alldepartments
+            }
+        ]
+        )
+        .then(function (answer) {
+            // console.log(answer);
+            const sql = `UPDATE roles SET title = ?, salary = ?, department_id = ? WHERE id = ?;`;
+            const params = [answer.newname, answer.salary, answer.department, answer.updateaction];
+            db.query(sql, params, function (err, res) {
+                if (err) throw err;
+                console.table(`\nThe role was updated!\n`);
+                updateServer();
+                rolesMenu();
+            })
+        })
+}
 
+function addRole() {
     updateServer();
     const newRole = inquirer.prompt([
         {
@@ -491,6 +547,42 @@ function addRole() {
         })
 }
 
+function departmentsMenu(message) {
+    updateServer();
+
+    if (message) {
+        console.log(message);
+    }
+
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'main',
+            message: 'Choose an action',
+            choices: ['View', 'Add', 'Edit', 'Remove', 'Main Menu']
+        })
+        .then(function (action) {
+            switch (action.main) {
+                case 'View':
+                    getRoles();
+                    break;
+                case 'Add':
+                    addRole();
+                    break;
+                case 'Remove':
+                    removeRole();
+                    break;
+                case 'Edit':
+                    editRole();
+                    break;
+                case 'Main Menu':
+                    console.clear();
+                    init();
+            }
+
+        })
+}
+
 function init() {
     console.clear();
     console.log(`
@@ -515,7 +607,7 @@ function init() {
                         employeeMenu();
                         break;
                     case 'DEPARTMENTS':
-                        getDepartments();
+                        departmentsMenu();
                         break;
                     case 'ROLES':
                         rolesMenu();
@@ -524,7 +616,7 @@ function init() {
                         console.clear();
                         process.exit(1);
                 }
-    
+
             })
     }
 }
