@@ -41,7 +41,7 @@ function getEmployees() {
         }
         console.table(rows);
         console.log(`Employees: ${rows.length} \n`);
-        app();
+        employeeMenu();
     })
 }
 
@@ -124,7 +124,7 @@ function addEmployee() {
                 if (err) throw err;
                 console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
                 updateServer();
-                app();
+                employeeMenu();
             })
         })
 }
@@ -149,7 +149,9 @@ function removeEmployee() {
                     if (err) throw err;
                 })
                 updateServer();
-                app();
+                console.clear();
+                message = `The employee was successfully fired! \n`;
+                employeeMenu(message);
             }
 
         })
@@ -202,23 +204,17 @@ function changeManager() {
                 choices: allemployees
             }])
         .then(function (answer) {
-            if (answer.employeelist === "CANCEL") {
-                app();
-            } else if (answer.managerlist === "CANCEL") {
-                app();
-            } else {
-
+            
                 const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
                 const params = [answer.managerlist, answer.employeelist]
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
                     updateServer();
-
-                    console.log(`\nManager updated!\n`)
-
-                    app();
+                    console.clear();
+                    message = "Manager updated!\n"
+                    employeeMenu(message);
                 })
-            }
+            
         })
 }
 
@@ -245,9 +241,9 @@ function changeRole() {
                 if (err) throw err;
                 updateServer();
 
-                console.log(`\nRole updated!\n`)
-
-                app();
+                console.clear();
+                message = "Role updated!\n"
+                employeeMenu(message);
             })
         })
 }
@@ -374,47 +370,37 @@ function updateDepartment() {
         )
 }
 
-function app() {
+function employeeMenu(message) {
     updateServer();
+
+    if(message) {
+        console.log(message);
+    }
+
     inquirer
         .prompt({
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['EMPLOYEES: View', 'EMPLOYEES: Add', 'EMPLOYEES: Edit', 'EMPLOYEES: Fire', 'ROLES: View', 'ROLES: Add', 'ROLES: Edit', 'ROLES: Remove', 'DEPARTMENTS: View', 'DEPARTMENTS: Add', 'DEPARTMENTS: Edit', 'DEPARTMENTS: Remove', 'Quit']
+            choices: ['View', 'Add', 'Edit', 'Fire', 'Main Menu']
         })
         .then(function (action) {
             switch (action.main) {
-                case 'EMPLOYEES: View':
+                case 'View':
                     getEmployees();
                     break;
-                case 'DEPARTMENTS: View':
-                    getDepartments();
-                    break;
-                case 'List roles':
-                    getRoles();
-                    break;
-                case 'EMPLOYEES: Add':
+                case 'Add':
                     addEmployee();
                     break;
-                case 'EMPLOYEES: Fire':
+                case 'Fire':
                     removeEmployee();
                     break;
-                case 'EMPLOYEES: Update':
+                case 'Edit':
                     updateEmployee();
                     break;
-                case 'DEPARTMENTS: Add':
-                    addDepartment();
-                    break;
-                case 'DEPARTMENTS: Remove':
-                    removeDepartment();
-                    break;
-                case 'DEPARTMENTS: Update':
-                    updateDepartment();
-                    break;
-                case 'Quit':
+                case 'Main Menu':
                     console.clear();
-                    process.exit(1);
+                    init();
             }
 
         })
@@ -422,7 +408,40 @@ function app() {
 
 function init() {
     console.clear();
+    console.log(`
+    ===============================
+    EMPLOYEE TRACKER
+    ===============================`);
+
     app();
+
+    function app() {
+        updateServer();
+        inquirer
+            .prompt({
+                type: 'list',
+                name: 'main',
+                message: 'Choose an action',
+                choices: ['EMPLOYEES', 'ROLES', 'DEPARTMENTS', 'Quit']
+            })
+            .then(function (action) {
+                switch (action.main) {
+                    case 'EMPLOYEES':
+                        employeeMenu();
+                        break;
+                    case 'DEPARTMENTS':
+                        getDepartments();
+                        break;
+                    case 'ROLES':
+                        rolesMenu();
+                        break;
+                    case 'Quit':
+                        console.clear();
+                        process.exit(1);
+                }
+    
+            })
+    }
 }
 
 init();
