@@ -29,9 +29,6 @@ db.connect(function (err) {
     updateServer();
 });
 
-
-// console.clear();
-
 function getEmployees() {
     console.clear();
     const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.depttitle AS Department FROM employees e LEFT JOIN roles ON roles.id = e.role_id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees m ON e.manager_id = m.id;`;
@@ -122,6 +119,7 @@ function addEmployee() {
             };
             db.query(sql, params, function (err, res) {
                 if (err) throw err;
+                console.clear();
                 console.table(`\n${answer.firstname} ${answer.lastname} was added!\n`);
                 updateServer();
                 employeeMenu();
@@ -492,6 +490,7 @@ function editRole() {
             const params = [answer.newname, answer.salary, answer.department, answer.updateaction];
             db.query(sql, params, function (err, res) {
                 if (err) throw err;
+                console.clear();
                 console.table(`\nThe role was updated!\n`);
                 updateServer();
                 rolesMenu();
@@ -540,6 +539,7 @@ function addRole() {
             const sql = `INSERT INTO roles (title, salary, department_id) VALUES ('${answer.roleName}', '${answer.salary}', '${answer.department}');`;
             db.query(sql, function (err, res) {
                 if (err) throw err;
+                console.clear();
                 console.table(`\n${answer.roleName} was added!\n`);
                 updateServer();
                 rolesMenu();
