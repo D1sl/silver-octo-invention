@@ -72,7 +72,7 @@ function getRoles() {
         }
         console.table(rows);
         console.log(`Roles: ${rows.length} \n`);
-        app();
+        rolesMenu();
     })
 }
 
@@ -164,7 +164,7 @@ function removeRole() {
             type: 'list',
             name: 'rolelist',
             message: 'Choose a role to remove or choose CANCEL to cancel',
-            choices: allemployees,
+            choices: allroles,
         })
         .then(function (answer) {
             if (answer.employeelist === "CANCEL") {
@@ -178,9 +178,9 @@ function removeRole() {
                 })
                 updateServer();
 
-                console.log(`\n Role removed! \n`)
-
-                app();
+                console.clear();
+                message = `Role removed! \n`;
+                rolesMenu(message);
             }
 
         })
@@ -403,6 +403,91 @@ function employeeMenu(message) {
                     init();
             }
 
+        })
+}
+
+function rolesMenu(message) {
+    updateServer();
+
+    if(message) {
+        console.log(message);
+    }
+
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'main',
+            message: 'Choose an action',
+            choices: ['View', 'Add', 'Edit', 'Remove', 'Main Menu']
+        })
+        .then(function (action) {
+            switch (action.main) {
+                case 'View':
+                    getRoles();
+                    break;
+                case 'Add':
+                    addRole();
+                    break;
+                case 'Remove':
+                    removeRole();
+                    break;
+                case 'Edit':
+                    editRole();
+                    break;
+                case 'Main Menu':
+                    console.clear();
+                    init();
+            }
+
+        })
+}
+
+function addRole() {
+
+    updateServer();
+    const newRole = inquirer.prompt([
+        {
+            type: 'input',
+            name: 'roleName',
+            message: 'Enter a name for the role',
+            validate: roleinput => {
+                if (roleinput) {
+                    return true;
+                } else {
+                    console.log('Please enter a name for the role!');
+                    return false;
+                }
+            }
+        },
+        {
+            type: 'number',
+            name: 'salary',
+            message: 'Enter salary for the role',
+            validate: salaryinput => {
+                if (salaryinput) {
+                    return true;
+                } else {
+                    console.log('Please enter a salary for the role!');
+                    return false;
+                }
+            }
+        },
+        {
+            type: 'list',
+            name: 'department',
+            message: 'Assign a department for this role',
+            choices: alldepartments
+        }
+    ])
+        .then(function (answer) {
+            // console.log(answer);
+            const sql = `INSERT INTO roles (title, salary, department_id) VALUES ('${answer.roleName}', '${answer.salary}', '${answer.department}');`;
+            db.query(sql, function (err, res) {
+                if (err) throw err;
+                console.table(`\n${answer.roleName} was added!\n`);
+                updateServer();
+                rolesMenu();
+            })
         })
 }
 
