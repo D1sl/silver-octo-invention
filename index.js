@@ -45,7 +45,7 @@ function getEmployees() {
 
 function getDepartments() {
     // console.clear();
-    const sql = `SELECT department_name as Departments FROM departments`;
+    const sql = `SELECT title as Departments FROM departments`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -295,14 +295,54 @@ function removeDepartment() {
         })
 }
 
+async function editDepartments() {
+    console.log(`\n EDIT DEPARTMENTS \n`);
+
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'deptactions',
+                message: 'Choose an action',
+                choices: ['View', 'Add', 'Edit', 'Delete']
+            }
+        ])
+        .then(function (action) {
+            switch (action.deptactions) {
+                case 'View':
+                    console.clear();
+                    console.log("View departments:");
+                    const sql = `SELECT title as Departments FROM departments`;
+                    db.query(sql, (err, rows) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.table(rows);
+                        console.log(`Departments: ${rows.length} \n Press UP or DOWN for actions \n\n\n\n`);
+                    })
+                    inquirer.prompt({ type: 'list', name: 'back', message: 'Press enter to go back', choices: ['Go Back'] })
+                        .then(function(action) { if(action === 'Go Back') { editDepartments(); } })
+                        break;
+                case 'Add':
+                    addDepartment();
+                    break;
+                case 'Delete':
+                    removeDepartment();
+                    break;
+            }
+
+        })
+}
+
 function app() {
+    console.clear();
     updateServer();
     inquirer
         .prompt({
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['List employees', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Remove a Department', 'Quit']
+            choices: ['List employees', 'Edit departments', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Remove a Department', 'Quit']
         })
         .then(function (action) {
             switch (action.main) {
@@ -329,6 +369,9 @@ function app() {
                     break;
                 case 'Remove a Department':
                     removeDepartment();
+                    break;
+                case 'Edit departments':
+                    editDepartments();
                     break;
                 case 'Quit':
                     console.clear();
