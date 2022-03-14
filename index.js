@@ -7,10 +7,12 @@ const db = require('./db/connection');
 function updateServer() {
     db.query("SELECT * from roles", function (error, res) {
         allroles = res.map(role => ({ name: role.title, value: role.id }));
+        allroles.push("CANCEL")
     });
 
     db.query("SELECT * from departments", function (error, res) {
-        alldepartments = res.map(department => ({ name: department.title, value: department.id }));
+        alldepartments = res.map(department => ({ name: department.depttitle, value: department.id }));
+        alldepartments.push("CANCEL")
     });
 
     db.query("SELECT * from employees", function (error, res) {
@@ -31,8 +33,8 @@ db.connect(function (err) {
 // console.clear();
 
 function getEmployees() {
-    // console.clear();
-    const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.department_name AS Department FROM employees e LEFT JOIN roles ON roles.id = e.role_id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees m ON e.manager_id = m.id;`;
+    console.clear();
+    const sql = `SELECT CONCAT(e.first_name,' ',e.last_name) AS Employee, roles.title AS Title, roles.salary as Salary, CONCAT(m.first_name,' ',m.last_name) AS Manager, departments.depttitle AS Department FROM employees e LEFT JOIN roles ON roles.id = e.role_id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees m ON e.manager_id = m.id;`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -44,8 +46,8 @@ function getEmployees() {
 }
 
 function getDepartments() {
-    // console.clear();
-    const sql = `SELECT title as Departments FROM departments`;
+    console.clear();
+    const sql = `SELECT depttitle as Departments FROM departments`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log(err);
@@ -57,8 +59,8 @@ function getDepartments() {
 }
 
 function getRoles() {
-    // console.clear();
-    const sql = `SELECT title AS Roles, salary AS Salary, department_name as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
+    console.clear();
+    const sql = `SELECT title AS Roles, salary AS Salary, depttitle as Department FROM roles LEFT JOIN departments ON roles.department_id = departments.id`;
 
 
     // let query = "SELECT roles.title, roles.salary, department.dept_name AS department FROM roles INNER JOIN department ON department.id = roles.department_id;";
@@ -133,7 +135,7 @@ function removeEmployee() {
         .prompt({
             type: 'list',
             name: 'employeelist',
-            message: 'Choose an employee to remove or choose CANCEL to cancel',
+            message: 'Choose an employee to fire or choose CANCEL to cancel',
             choices: allemployees,
         })
         .then(function (answer) {
@@ -143,11 +145,39 @@ function removeEmployee() {
 
                 const sql = `DELETE FROM employees WHERE id = ?`;
                 const params = answer.employeelist;
-                // console.log(answer.employeelist)
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
                 })
                 updateServer();
+                app();
+            }
+
+        })
+}
+
+function removeRole() {
+    updateServer();
+    inquirer
+        .prompt({
+            type: 'list',
+            name: 'rolelist',
+            message: 'Choose a role to remove or choose CANCEL to cancel',
+            choices: allemployees,
+        })
+        .then(function (answer) {
+            if (answer.employeelist === "CANCEL") {
+                app();
+            } else {
+
+                const sql = `DELETE FROM roles WHERE id = ?`;
+                const params = answer.rolelist;
+                db.query(sql, params, (err, res) => {
+                    if (err) throw err;
+                })
+                updateServer();
+
+                console.log(`\n Role removed! \n`)
+
                 app();
             }
 
@@ -172,16 +202,23 @@ function changeManager() {
                 choices: allemployees
             }])
         .then(function (answer) {
-            const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
-            const params = [answer.managerlist, answer.employeelist]
-            db.query(sql, params, (err, res) => {
-                if (err) throw err;
-                updateServer();
-
-                console.log(`\nManager updated!\n`)
-
+            if (answer.employeelist === "CANCEL") {
                 app();
-            })
+            } else if (answer.managerlist === "CANCEL") {
+                app();
+            } else {
+
+                const sql = `UPDATE employees SET manager_id = ? WHERE id = ?`;
+                const params = [answer.managerlist, answer.employeelist]
+                db.query(sql, params, (err, res) => {
+                    if (err) throw err;
+                    updateServer();
+
+                    console.log(`\nManager updated!\n`)
+
+                    app();
+                })
+            }
         })
 }
 
@@ -223,9 +260,12 @@ function updateEmployee() {
             type: 'list',
             name: 'updateaction',
             message: 'What would you like to do?',
-            choices: ["Change an employee's manager", "Change an employee's role"]
+            choices: ["Change an employee's manager", "Change an employee's role", "CANCEL"]
         })
         .then(function (action) {
+            if (action.updateaction === "CANCEL") {
+                app();
+            }
             switch (action.updateaction) {
                 case "Change an employee's manager":
                     updateServer();
@@ -257,7 +297,7 @@ function addDepartment() {
         }
     ])
         .then(function (answer) {
-            const sql = `INSERT INTO departments (title) VALUES ('${answer.departmentName}');`;
+            const sql = `INSERT INTO departments (depttitle) VALUES ('${answer.departmentName}');`;
             db.query(sql, function (err, res) {
                 if (err) throw err;
                 console.table(`\n${answer.departmentName} was added!\n`);
@@ -295,83 +335,82 @@ function removeDepartment() {
         })
 }
 
-async function editDepartments() {
-    console.log(`\n EDIT DEPARTMENTS \n`);
-
+function updateDepartment() {
+    updateServer();
     inquirer
         .prompt([
             {
                 type: 'list',
-                name: 'deptactions',
-                message: 'Choose an action',
-                choices: ['View', 'Add', 'Edit', 'Delete']
+                name: 'choosedept',
+                message: 'Which department would you like to rename? Select CANCEL to cancel',
+                choices: alldepartments
+            },
+            {
+                type: 'input',
+                name: 'newname',
+                message: 'Enter a new name for this department'
             }
         ])
+
+
         .then(function (action) {
-            switch (action.deptactions) {
-                case 'View':
-                    console.clear();
-                    console.log("View departments:");
-                    const sql = `SELECT title as Departments FROM departments`;
-                    db.query(sql, (err, rows) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                        console.table(rows);
-                        console.log(`Departments: ${rows.length} \n Press UP or DOWN for actions \n\n\n\n`);
-                    })
-                    inquirer.prompt({ type: 'list', name: 'back', message: 'Press enter to go back', choices: ['Go Back'] })
-                        .then(function(action) { if(action === 'Go Back') { editDepartments(); } })
-                        break;
-                case 'Add':
-                    addDepartment();
-                    break;
-                case 'Delete':
-                    removeDepartment();
-                    break;
+            if (action.updateaction === "CANCEL") {
+                app();
             }
 
-        })
+            const sql = `UPDATE departments SET depttitle = ? WHERE id = ?`;
+            const params = [action.newname, action.choosedept]
+
+            db.query(sql, params, (err, res) => {
+                if (err) throw err;
+                updateServer();
+
+                console.log(`\nDepartment renamed!\n`)
+
+                app();
+            })
+
+        }
+        )
 }
 
 function app() {
-    console.clear();
     updateServer();
     inquirer
         .prompt({
             type: 'list',
             name: 'main',
             message: 'Choose an action',
-            choices: ['List employees', 'Edit departments', 'List departments', 'List roles', 'Add an Employee', 'Update an Employee', 'Remove an Employee', 'Add a Department', 'Remove a Department', 'Quit']
+            choices: ['EMPLOYEES: View', 'EMPLOYEES: Add', 'EMPLOYEES: Edit', 'EMPLOYEES: Fire', 'ROLES: View', 'ROLES: Add', 'ROLES: Edit', 'ROLES: Remove', 'DEPARTMENTS: View', 'DEPARTMENTS: Add', 'DEPARTMENTS: Edit', 'DEPARTMENTS: Remove', 'Quit']
         })
         .then(function (action) {
             switch (action.main) {
-                case 'List employees':
+                case 'EMPLOYEES: View':
                     getEmployees();
                     break;
-                case 'List departments':
+                case 'DEPARTMENTS: View':
                     getDepartments();
                     break;
                 case 'List roles':
                     getRoles();
                     break;
-                case 'Add an Employee':
+                case 'EMPLOYEES: Add':
                     addEmployee();
                     break;
-                case 'Remove an Employee':
+                case 'EMPLOYEES: Fire':
                     removeEmployee();
                     break;
-                case 'Update an Employee':
+                case 'EMPLOYEES: Update':
                     updateEmployee();
                     break;
-                case 'Add a Department':
+                case 'DEPARTMENTS: Add':
                     addDepartment();
                     break;
-                case 'Remove a Department':
+                case 'DEPARTMENTS: Remove':
                     removeDepartment();
                     break;
-                case 'Edit departments':
-                    editDepartments();
+                case 'DEPARTMENTS: Update':
+                    updateDepartment();
                     break;
                 case 'Quit':
                     console.clear();
@@ -381,4 +420,9 @@ function app() {
         })
 }
 
-app();
+function init() {
+    console.clear();
+    app();
+}
+
+init();
