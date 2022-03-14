@@ -54,7 +54,7 @@ function getDepartments() {
         }
         console.table(rows);
         console.log(`Departments: ${rows.length} \n`);
-        app();
+        departmentsMenu();
     })
 }
 
@@ -296,9 +296,10 @@ function addDepartment() {
             const sql = `INSERT INTO departments (depttitle) VALUES ('${answer.departmentName}');`;
             db.query(sql, function (err, res) {
                 if (err) throw err;
-                console.table(`\n${answer.departmentName} was added!\n`);
+                console.clear();
+                message = `${answer.departmentName} was added!\n`;
                 updateServer();
-                app();
+                departmentsMenu(message);
             })
         })
 }
@@ -321,11 +322,12 @@ function removeDepartment() {
                 const params = answer.departmentlist;
                 db.query(sql, params, (err, res) => {
                     if (err) throw err;
-                    console.table(`\n${answer.departmentlist} was removed!\n`);
-
+                    
                 })
+                console.clear();
+                message = `The department was removed!\n`;
                 updateServer();
-                app();
+                departmentsMenu(message);
             }
 
         })
@@ -338,7 +340,7 @@ function updateDepartment() {
             {
                 type: 'list',
                 name: 'choosedept',
-                message: 'Which department would you like to rename? Select CANCEL to cancel',
+                message: 'Which department would you like to rename?',
                 choices: alldepartments
             },
             {
@@ -350,9 +352,6 @@ function updateDepartment() {
 
 
         .then(function (action) {
-            if (action.updateaction === "CANCEL") {
-                app();
-            }
 
             const sql = `UPDATE departments SET depttitle = ? WHERE id = ?`;
             const params = [action.newname, action.choosedept]
@@ -361,9 +360,10 @@ function updateDepartment() {
                 if (err) throw err;
                 updateServer();
 
-                console.log(`\nDepartment renamed!\n`)
+                console.clear();
+                message = `Department renamed!\n`;
 
-                app();
+                departmentsMenu(message);
             })
 
         }
@@ -564,16 +564,16 @@ function departmentsMenu(message) {
         .then(function (action) {
             switch (action.main) {
                 case 'View':
-                    getRoles();
+                    getDepartments();
                     break;
                 case 'Add':
-                    addRole();
+                    addDepartment();
                     break;
                 case 'Remove':
-                    removeRole();
+                    removeDepartment();
                     break;
                 case 'Edit':
-                    editRole();
+                    updateDepartment();
                     break;
                 case 'Main Menu':
                     console.clear();
